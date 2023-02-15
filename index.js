@@ -17,7 +17,7 @@ server.get("/", (req, res) => {
   res.render('pages/index')
 });
 
-server.post("/profile", async (req, res) => {
+server.post("/account", async (req, res) => {
   var handle = req.body.fhandle;
   console.log(await db.list("handle-"));
   
@@ -26,16 +26,24 @@ server.post("/profile", async (req, res) => {
   if (handleAlreadyTaken == false) {
     var result = await createAccount(handle);
 
-    res.render('pages/profile', {
-      did: result["did"],
-      key: result["key"],
-      handle: handle,
-      doc: JSON.stringify(JSON.parse(await result["doc"]), null, 2)
-    });
+    res.redirect(`profile/${result["did"]}`);
   } else {
     console.log("Handle already taken");
     res.status(404).send("Handle already taken");
   };
+});
+
+server.get("/profile/:id", async (req, res) => {
+  var params = req.params;
+  var result = await db.get(params["id"]);
+  var doc = DIDKit.resolveDID(params["id"], "{}");
+
+  res.render('pages/profile',{
+    did: params["id"],
+    key: result["key"],
+    handle: result["handle"],
+    doc: JSON.stringify(JSON.parse(await doc), null, 2)
+  });
 });
 
 server.listen(port, (err) => {
