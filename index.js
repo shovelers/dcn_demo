@@ -19,17 +19,15 @@ server.get("/", (req, res) => {
 
 server.post("/account", async (req, res) => {
   var handle = req.body.fhandle;
-  console.log(await db.list("handle-"));
-  
   var handleAlreadyTaken = await handleUniqueness(handle);
 
   if (handleAlreadyTaken == false) {
     var result = await createAccount(handle);
-
+    console.log(`Account created for handle:${handle}, did:${did}`);
     res.redirect(`profile/${result["did"]}`);
   } else {
-    console.log("Handle already taken");
-    res.status(404).send("Handle already taken");
+    console.log(`Handle: ${handle} already taken`);
+    res.status(404).send(`Handle: ${handle} already taken`);
   };
 });
 
@@ -43,7 +41,7 @@ server.post("/signin", async (req, res) => {
     res.status(404).send("Create an account first");
   } else {
     var did = await didByHandle(handle);
-    console.log(did);
+    console.log(`Profile lookup for handle:${handle}, DID: ${did}`);
     res.redirect(`profile/${did}`);
   };
 });
@@ -80,9 +78,7 @@ async function createAccount(handle) {
 
   db.set(did, {"key": key, "handle": handle});
   db.set(`handle-${handle}` , did);
-  console.log(key);
-  console.log(did);
-
+  
   return {key: key, did: did, doc:doc}
 };
 
