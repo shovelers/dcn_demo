@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script type = "text/javascript" src="../index.js" defer></script>
+    <link rel="stylesheet" href="./styles/style.css" />
+  </head>
+  
+  <%- include('../partials/google_analytics.ejs') %>
+  
+  <body class="antialiased">
+    <div class="container mx-auto px-4 h-screen flex flex-col justify-center items-center prose prose-slate">
+      <div class="text-lg md:text-xl font-semibold">Handle: <span><%= handle %></span> </div>
+      <div class="text-sm md:text-lg font-semibold">DID: <span><%= did %></span></div>
+      <div class="text-sm md:text-lg font-semibold overflow-auto text-center">Key: <span><%= key %></span></div>
+      <pre class="w-4/5 text-left jsonPre">Doc: <code><%= doc %></code> </pre>
+      <%- include('../partials/shovel.ejs') %>
+    </div>
+  </body>
+</html>
