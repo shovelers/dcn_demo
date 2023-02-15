@@ -33,6 +33,21 @@ server.post("/account", async (req, res) => {
   };
 });
 
+server.post("/signin", async (req, res) => {
+  var handle = req.body.fhandle;
+  
+  var handleAlreadyTaken = await handleUniqueness(handle);
+
+  if (handleAlreadyTaken == false) {
+    console.log("Create an account first");
+    res.status(404).send("Create an account first");
+  } else {
+    var did = await didByHandle(handle);
+    console.log(did);
+    res.redirect(`profile/${did}`);
+  };
+});
+
 server.get("/profile/:id", async (req, res) => {
   var params = req.params;
   var result = await db.get(params["id"]);
@@ -69,4 +84,8 @@ async function createAccount(handle) {
   console.log(did);
 
   return {key: key, did: did, doc:doc}
+};
+
+async function didByHandle(handle) {
+  return db.get(`handle-${handle}`)
 };
