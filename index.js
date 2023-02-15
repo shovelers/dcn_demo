@@ -23,7 +23,7 @@ server.post("/account", async (req, res) => {
 
   if (handleAlreadyTaken == false) {
     var result = await createAccount(handle);
-    console.log(`Account created for handle:${handle}, did:${did}`);
+    console.log(`Account created for handle:${handle}, did:${result["did"]}`);
     res.redirect(`profile/${result["did"]}`);
   } else {
     console.log(`Handle: ${handle} already taken`);
