@@ -11,10 +11,10 @@
   <body class="antialiased">
     <div class="container mx-auto px-4 h-screen w-5/6 flex flex-col justify-center items-center prose prose-slate">
       <div class="flex flex-row">
-        <div class="flex flex-col">
-          <div class="text-lg md:text-xl font-semibold">Handle: <span><%= handle %></span> </div>
-          <div class="text-sm md:text-lg font-semibold">DID: <span><%= did %></span></div>
-          <div class="text-sm md:text-lg font-semibold text-center">Key: <span><%= key %></span> </div>
+        <div class="flex flex-col w-1/2 items-center justify-center">
+          <div class="text-lg md:text-xl font-semibold">Handle: <p class="text-sm"><%= handle %></p></div>
+          <div class="text-sm md:text-lg font-semibold">DID: <p class="text-sm"><%= did %></p></div>
+          <div class="text-sm md:text-lg font-semibold">Key: <p class="text-xs break-all"><%= key %></p></div>
           <form id="form1" method="post" action="/follow" class="space-y-1 text-center">
             <label>Send Request</label>
             <label for="team_name" class="font-bold">@</label>
@@ -22,9 +22,17 @@
             <input type="hidden" name="subjectDID" value= <%= did %> />
             <button type="submit" class="rounded-lg bg-blue-500 px-2 py-2 text-gray-200">Request Follow</button>
           </form>
+          <div class="h-16 bg-blue-500">
+            <p>Inbox</p>
+            <ul>
+              <% inbox.forEach(function(message) { %>
+                <li> Requester:<%= JSON.stringify(message.credentialSubject["id"]) %></li>
+              <% }); %>
+            </ul>
+          </div>
         </div>
-        <div>
-          <pre class="text-left">Doc: <code><%= doc %></code> </pre>
+        <div class="w-1/2 overflow-hidden">
+          <pre class="text-left text-sm">Doc: <code><%= doc %></code> </pre>
         </div>
       </div>
       <%- include('../partials/shovel.ejs') %>

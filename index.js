@@ -51,13 +51,15 @@ server.get("/profile/:id", async (req, res) => {
   var params = req.params;
   var result = await db.get(params["id"]);
   var doc = DIDKit.resolveDID(params["id"], "{}");
-
-  console.log(result);
+  var inbox = await db.get(`inbox-${params["id"]}`);
+  
+  console.log(inbox);
 
   res.render('pages/profile',{
     did: params["id"],
     key: result["key"],
     handle: result["handle"],
+    inbox: inbox,
     doc: JSON.stringify(JSON.parse(await doc), null, 2)
   });
 });
