@@ -1,6 +1,7 @@
 const express = require("express");
 const DIDKit = require('@spruceid/didkit-wasm-node');
 const Database = require("@replit/database");
+const { v4: uuidv4 } = require('uuid');
 
 const path = require("path");
 const port = 3000;
@@ -51,12 +52,40 @@ server.get("/profile/:id", async (req, res) => {
   var result = await db.get(params["id"]);
   var doc = DIDKit.resolveDID(params["id"], "{}");
 
+  console.log(result);
+
   res.render('pages/profile',{
     did: params["id"],
     key: result["key"],
     handle: result["handle"],
     doc: JSON.stringify(JSON.parse(await doc), null, 2)
   });
+});
+
+server.post("/follow", async (req, res) => {
+  var handle = req.body.fhandle;
+  console.log(req.body);
+  
+  var userExists = await handleUniqueness(handle);
+
+  if (userExists == true) {
+    var issuerDID = await didByHandle(handle);
+    var subjectDID = req.body.subjectDID;
+    var unsignedVC = await constructUnsignedVC(subjectDID, issuerDID);
+    
+    issuerInbox = await db.get(`inbox-${issuerDID}`);
+    issuerInbox.push(unsignedVC);
+    db.set(`inbox-${issuerDID}`, issuerInbox);
+
+    console.log("IssuerInbox");
+    console.log(await db.get(`inbox-${issuerDID}`));
+
+    res.send("Request Sent");
+    res.status(201);
+  } else {
+    console.log(`Account with handle:${handle} doesn't exist`);
+    res.status(404).send(`Account with handle:${handle} doesn't exist`);
+  };
 });
 
 server.listen(port, (err) => {
@@ -77,11 +106,29 @@ async function createAccount(handle) {
   var doc = DIDKit.resolveDID(did, "{}");
 
   db.set(did, {"key": key, "handle": handle});
-  db.set(`handle-${handle}` , did);
+  db.set(`inbox-${did}`, []);
+  db.set(`handle-${handle}`, did);
   
   return {key: key, did: did, doc:doc}
 };
 
 async function didByHandle(handle) {
   return db.get(`handle-${handle}`)
+};
+
+async function constructUnsignedVC(subjectDID, issuerDID){
+  var uuid = uuidv4();
+  return {
+    "@context": "https://www.w3.org/2018/credentials/v1",
+    "id": `urn:dcn:${uuid}`,
+    "type": ["VerifiableCredential", "FollowCredential"],
+    "issuer": issuerDID,
+    "issuanceDate": new Date().toISOString(),
+    "credentialSubject": {
+      "id": subjectDID,
+      "follows": {
+        "id": issuerDID
+      }
+    }
+  }
 };
