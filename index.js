@@ -49,9 +49,12 @@ server.post("/signin", async (req, res) => {
 
 server.get("/profile/:id", async (req, res) => {
   var params = req.params;
-  var result = await db.get(params["id"]);
-  var doc = DIDKit.resolveDID(params["id"], "{}");
-  var inbox = await db.get(`inbox-${params["id"]}`);
+  var did = params["id"];
+  var result = await db.get(did);
+  var doc = DIDKit.resolveDID(did, "{}");
+  var inbox = await db.get(`inbox-${did}`);
+  var followers = await db.get(`followers-${did}`);
+  var following = await db.get(`following-${did}`);
   
   console.log(inbox);
 
@@ -60,11 +63,13 @@ server.get("/profile/:id", async (req, res) => {
     key: result["key"],
     handle: result["handle"],
     inbox: inbox,
-    doc: JSON.stringify(JSON.parse(await doc), null, 2)
+    doc: JSON.stringify(JSON.parse(await doc), null, 2),
+    followers: followers,
+    following: following
   });
 });
 
-server.post("/follow", async (req, res) => {
+server.post("/request_follow", async (req, res) => {
   var handle = req.body.fhandle;
   console.log(req.body);
   
@@ -90,6 +95,19 @@ server.post("/follow", async (req, res) => {
   };
 });
 
+server.post("/accept_follow", async (req, res) => {
+  var subjectDID = req.body.subjectDID;
+  var issuerDID = req.body.issuerDID;
+  
+  var signedVC = await issueVC(subjectDID, issuerDID);
+
+  updateFollowing(subjectDID, signedVC);
+  console.log(await db.get(`following-${subjectDID}`));
+
+  updateFollowers(issuerDID, signedVC);
+  console.log(await db.get(`followers-${issuerDID}`));
+});
+
 server.listen(port, (err) => {
   if (err) throw err;
   console.log(
@@ -109,8 +127,10 @@ async function createAccount(handle) {
 
   db.set(did, {"key": key, "handle": handle});
   db.set(`inbox-${did}`, []);
+  db.set(`followers-${did}`, []);
+  db.set(`following-${did}`, []);
   db.set(`handle-${handle}`, did);
-  
+
   return {key: key, did: did, doc:doc}
 };
 
@@ -118,19 +138,34 @@ async function didByHandle(handle) {
   return db.get(`handle-${handle}`)
 };
 
-async function constructUnsignedVC(subjectDID, issuerDID){
+async function constructUnsignedVC(subjectDID, issuerDID) {
   var uuid = uuidv4();
-  return {
-    "@context": "https://www.w3.org/2018/credentials/v1",
-    "id": `urn:dcn:${uuid}`,
-    "type": ["VerifiableCredential", "FollowCredential"],
-    "issuer": issuerDID,
-    "issuanceDate": new Date().toISOString(),
-    "credentialSubject": {
-      "id": subjectDID,
-      "follows": {
-        "id": issuerDID
-      }
-    }
-  }
+  var date = new Date().toISOString();
+
+  return `{\"@context\": \"https://www.w3.org/2018/credentials/v1\",\"id\":\"urn:did:${uuid}\",\"type\": [\"VerifiableCredential\"],\"issuer\": \"${issuerDID}\",\"issuanceDate\": \"${date}\",\"credentialSubject\": {\"id\": \"${subjectDID}\"}}`
+};
+
+async function issueVC(subjectDID, issuerDID){
+  var unsignedVC = await constructUnsignedVC(subjectDID, issuerDID);
+  
+  var issuer = await db.get(issuerDID);
+  var signingKey = issuer["key"];
+  var issuerVerificationMethod = await DIDKit.keyToVerificationMethod("key", signingKey);
+  var vcOptions = `{"proofPurpose": "assertionMethod", "verificationMethod": "${issuerVerificationMethod}"}`;
+
+  var signedVC = await DIDKit.issueCredential(unsignedVC, vcOptions, signingKey).catch(e => { console.log(e) });
+
+  return signedVC;
+};
+
+async function updateFollowing(did, message) {
+  var followingList = await db.get(`following-${did}`);
+  followingList.push(message);
+  db.set(`following-${did}`, followingList);
+};
+
+async function updateFollowers(did, message) {
+  var followersList = await db.get(`followers-${did}`);
+  followersList.push(message);
+  db.set(`followers-${did}`, followersList);
 };

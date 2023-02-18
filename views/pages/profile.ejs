@@ -15,38 +15,50 @@
           <div class="text-lg md:text-xl font-semibold text-blue-500">Handle:<span class="text-sm text-gray-800"><%= handle %></span></div>
           <div class="text-sm md:text-lg font-semibold text-blue-500">DID:<span class="text-sm text-gray-800"><%= did %></span></div>
           <div class="text-sm md:text-lg font-semibold text-blue-500">Key:<span class="text-xs break-all text-gray-800"><%= key %></span></div>
-          <form id="form1" method="post" action="/follow" class="space-y-1">
+          <form id="form1" method="post" action="/request_follow" class="space-y-1">
             <label>Send Request</label>
             <label for="team_name" class="font-bold">@</label>
             <input type="text" name="fhandle" class="border border-gray-300 px-2 py-1 rounded-lg">
             <input type="hidden" name="subjectDID" value= <%= did %> />
             <button type="submit" class="rounded-lg bg-blue-500 px-2 py-2 text-gray-200">Request Follow</button>
           </form>
-          <div class="h-64 w-full">
-            <div class="font-semibold"> Pending Follow Requests</div>
-            <div class="flex flex-col overflow-y-scroll w-full">
-              <table class="text-left">
-                <thead>
-                  <tr class="sticky top-0 bg-gray-400 text-gray-100">
-                    <th>User</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% inbox.forEach(function(message) { %>
-                  <tr class="bg-gray-100">
-                    <td><%= JSON.stringify(message.credentialSubject["id"]) %></td>
-                    <td><button type="submit" class="rounded-lg bg-blue-500 px-2 py-2 text-gray-200">Accept</button></td>
-                  </tr>
-                  <% }); 
-                  %> 
-                </tbody>
-              </table>
-            </div>
+          <div class="font-semibold"> Pending Follow Requests</div>
+          <div class="flex flex-col overflow-y-scroll h-64 w-full">
+            <table class="text-left">
+              <thead>
+                <tr class="sticky top-0 bg-gray-400 text-gray-100">
+                  <th>User</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% inbox.forEach(function(message) { %>
+                <tr class="bg-gray-100">
+                  <td><%= JSON.parse(message).credentialSubject["id"] %></td>
+                  <td>
+                    <form id="accept_form" method="post" action="/accept_follow" class="space-y-1">
+                      <input type="hidden" name="issuerDID" value= <%= did %> />
+                      <input type="hidden" name="subjectDID" value= <%= JSON.parse(message).credentialSubject["id"] %> />
+                      <button type="submit" class="rounded-lg bg-blue-500 px-2 py-2 text-gray-200">Accept</button>
+                    </form>
+                  </td>
+                </tr>
+                <% }); 
+                %> 
+              </tbody>
+            </table>
           </div>
         </div>
-        <div class="w-1/2 overflow-hidden">
-          <pre class="text-left text-sm">Doc: <code><%= doc %></code> </pre>
+        <div class="w-1/2 overflow-hidden flex flex-col">
+          <pre class="text-left text-sm h-1/2">DID Doc: <code><%= doc %></code> </pre>
+          <div class="flex flex-row">
+            <div class="w-1/2">
+              Followers
+            </div>
+            <div class="w-1/2">
+              Following
+            </div>
+          </div>
         </div>
       </div>
       <%- include('../partials/shovel.ejs') %>
