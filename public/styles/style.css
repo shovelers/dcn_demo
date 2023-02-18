@@ -1093,6 +1093,10 @@ video {
   width: 100%;
 }
 
+.w-4\/5 {
+  width: 80%;
+}
+
 .flex-row {
   flex-direction: row;
 }

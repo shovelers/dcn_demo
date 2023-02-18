@@ -9,7 +9,7 @@
   <%- include('../partials/google_analytics.ejs') %>
   
   <body class="antialiased">
-    <div class="container mx-auto px-4 h-screen w-5/6 flex flex-col justify-center items-center prose prose-slate">
+    <div class="container mx-auto px-4 h-screen w-4/5 flex flex-col justify-center items-center prose prose-slate">
       <div class="flex flex-row">
         <div class="flex flex-col w-1/2 items-left justify-center">
           <div class="text-lg md:text-xl font-semibold text-blue-500">Handle:<span class="text-sm text-gray-800"><%= handle %></span></div>
@@ -49,14 +49,42 @@
             </table>
           </div>
         </div>
-        <div class="w-1/2 overflow-hidden flex flex-col">
+        <div class="w-1/2 overflow-hidden flex flex-col justify-center">
           <pre class="text-left text-sm h-1/2">DID Doc: <code><%= doc %></code> </pre>
           <div class="flex flex-row">
             <div class="w-1/2">
-              Followers
+              <table class="text-left">
+              <thead>
+                <tr class="sticky top-0 bg-gray-400 text-gray-100">
+                  <th>Followers</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% followers.forEach(function(follower) { %>
+                <tr class="bg-gray-100">
+                  <td><%= JSON.parse(follower).credentialSubject["id"] %></td>
+                </tr>
+                <% }); 
+                %> 
+              </tbody>
+            </table>
             </div>
             <div class="w-1/2">
-              Following
+              <table class="text-left">
+              <thead>
+                <tr class="sticky top-0 bg-gray-400 text-gray-100">
+                  <th>Following</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% following.forEach(function(follow) { %>
+                <tr class="bg-gray-100">
+                  <td><%= JSON.parse(follow).issuer %></td>
+                </tr>
+                <% }); 
+                %> 
+              </tbody>
+            </table>
             </div>
           </div>
         </div>
