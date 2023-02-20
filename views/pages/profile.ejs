@@ -34,11 +34,11 @@
               <tbody>
                 <% inbox.forEach(function(message) { %>
                 <tr class="bg-gray-100">
-                  <td><%= JSON.parse(message).credentialSubject["id"] %></td>
+                  <td><%= message %></td>
                   <td>
                     <form id="accept_form" method="post" action="/accept_follow" class="space-y-1">
                       <input type="hidden" name="issuerDID" value= <%= did %> />
-                      <input type="hidden" name="subjectDID" value= <%= JSON.parse(message).credentialSubject["id"] %> />
+                      <input type="hidden" name="subjectDID" value= <%= message %> />
                       <button type="submit" class="rounded-lg bg-blue-500 px-2 py-2 text-gray-200">Accept</button>
                     </form>
                   </td>

@@ -78,14 +78,10 @@ server.post("/request_follow", async (req, res) => {
   if (userExists == true) {
     var issuerDID = await didByHandle(handle);
     var subjectDID = req.body.subjectDID;
-    var unsignedVC = await constructUnsignedVC(subjectDID, issuerDID);
     
     issuerInbox = await db.get(`inbox-${issuerDID}`);
-    issuerInbox.push(unsignedVC);
+    issuerInbox.push(subjectDID);
     db.set(`inbox-${issuerDID}`, issuerInbox);
-
-    console.log("IssuerInbox");
-    console.log(await db.get(`inbox-${issuerDID}`));
 
     res.send("Request Sent");
     res.status(201);
@@ -106,6 +102,12 @@ server.post("/accept_follow", async (req, res) => {
 
   updateFollowers(issuerDID, signedVC);
   console.log(await db.get(`followers-${issuerDID}`));
+
+  //removeRequestFromInbox
+  removeRequestFromInbox(subjectDID, issuerDID);
+  
+  //redirect back to profile page
+  res.redirect(`profile/${issuerDID}`);
 });
 
 server.listen(port, (err) => {
@@ -168,4 +170,13 @@ async function updateFollowers(did, message) {
   var followersList = await db.get(`followers-${did}`);
   followersList.push(message);
   db.set(`followers-${did}`, followersList);
+};
+
+async function removeRequestFromInbox(subjectDID, issuerDID) {
+  var inbox = await db.get(`inbox-${issuerDID}`);
+  const index = inbox.indexOf(subjectDID);
+  if (index > -1) {
+    inbox.splice(index, 1);
+  }
+  db.set(`inbox-${issuerDID}`, inbox);
 };
