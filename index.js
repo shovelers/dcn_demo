@@ -71,7 +71,6 @@ server.get("/profile/:id", async (req, res) => {
 
 server.post("/request_follow", async (req, res) => {
   var handle = req.body.fhandle;
-  console.log(req.body);
   
   var userExists = await handleUniqueness(handle);
 
@@ -81,7 +80,9 @@ server.post("/request_follow", async (req, res) => {
     
     var alreadyPending = await checkPendingRequest(subjectDID, issuerDID);
     
-    if (alreadyPending == false) {
+    var alreadyFollowing = await checkFollowing(subjectDID, issuerDID); 
+    
+    if (alreadyPending == false && alreadyFollowing == false) {
       issuerInbox = await db.get(`inbox-${issuerDID}`);
       issuerInbox.push(subjectDID);
       db.set(`inbox-${issuerDID}`, issuerInbox);
@@ -91,7 +92,7 @@ server.post("/request_follow", async (req, res) => {
       res.send("Request Sent");
       res.status(201);
     } else {
-      res.status(409).send(`Follow Request already sent to ${handle} before`);
+      res.status(409).send(`Follow Request already sent Or Already following ${handle}`);
     }
   } else {
     console.log(`Account with handle:${handle} doesn't exist`);
@@ -106,12 +107,12 @@ server.post("/accept_follow", async (req, res) => {
   var signedVC = await issueVC(subjectDID, issuerDID);
 
   updateFollowing(subjectDID, signedVC);
-  console.log(await db.get(`following-${subjectDID}`));
 
   updateFollowers(issuerDID, signedVC);
-  console.log(await db.get(`followers-${issuerDID}`));
 
   removeRequestFromInbox(subjectDID, issuerDID);
+
+  removeRequestFromPending(subjectDID, issuerDID);
   
   res.redirect(`profile/${issuerDID}`);
 });
@@ -131,6 +132,17 @@ async function handleUniqueness(handle) {
 async function checkPendingRequest(subjectDID, issuerDID) {
   var pendingList = await db.get(`pending-${subjectDID}`);
   return pendingList.includes(issuerDID);
+};
+
+async function checkFollowing(subjectDID, issuerDID) {
+  var followingList = await db.get(`following-${subjectDID}`);
+  var followingDIDs = []
+  followingList.forEach((element) => {
+    console.log(JSON.parse(element));
+    followingDIDs.push(JSON.parse(element).issuer);
+  })
+
+  return followingDIDs.includes(issuerDID);
 };
 
 async function createAccount(handle) {
@@ -196,5 +208,14 @@ async function removeRequestFromInbox(subjectDID, issuerDID) {
 async function addPendingRequest(subjectDID, issuerDID) {
   var pending = await db.get(`pending-${subjectDID}`);
   pending.push(issuerDID);
+  db.set(`pending-${subjectDID}`, pending);
+};
+
+async function removeRequestFromPending(subjectDID, issuerDID) {
+  var pending = await db.get(`pending-${subjectDID}`);
+  const index = pending.indexOf(issuerDID);
+  if (index > -1) {
+    pending.splice(index, 1);
+  }
   db.set(`pending-${subjectDID}`, pending);
 };
