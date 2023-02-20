@@ -22,7 +22,7 @@
             <input type="hidden" name="subjectDID" value= <%= did %> />
             <button type="submit" class="rounded-lg bg-blue-500 px-2 py-2 text-gray-200">Request Follow</button>
           </form>
-          <div class="font-semibold"> Pending Follow Requests</div>
+          <div class="font-semibold"> Follow Requests</div>
           <div class="flex flex-col overflow-y-scroll h-64 w-full">
             <table class="text-left">
               <thead>
@@ -48,26 +48,44 @@
               </tbody>
             </table>
           </div>
+          <div class="font-semibold"> Pending Requests </div>
+          <div>
+            <table class="text-left">
+                <thead>
+                  <tr class="sticky top-0 bg-gray-400 text-gray-100">
+                    <th>Users</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% pendingRequests.forEach(function(user) { %>
+                  <tr class="bg-gray-100">
+                    <td><%= user %></td>
+                  </tr>
+                  <% }); 
+                  %> 
+                </tbody>
+              </table>
+          </div>
         </div>
         <div class="w-1/2 overflow-hidden flex flex-col justify-center">
           <pre class="text-left text-sm h-1/2">DID Doc: <code><%= doc %></code> </pre>
           <div class="flex flex-row">
             <div class="w-1/2">
               <table class="text-left">
-              <thead>
-                <tr class="sticky top-0 bg-gray-400 text-gray-100">
-                  <th>Followers</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% followers.forEach(function(follower) { %>
-                <tr class="bg-gray-100">
-                  <td><%= JSON.parse(follower).credentialSubject["id"] %></td>
-                </tr>
-                <% }); 
-                %> 
-              </tbody>
-            </table>
+                <thead>
+                  <tr class="sticky top-0 bg-gray-400 text-gray-100">
+                    <th>Followers</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% followers.forEach(function(follower) { %>
+                  <tr class="bg-gray-100">
+                    <td><%= JSON.parse(follower).credentialSubject["id"] %></td>
+                  </tr>
+                  <% }); 
+                  %> 
+                </tbody>
+              </table>
             </div>
             <div class="w-1/2">
               <table class="text-left">

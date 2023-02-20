@@ -55,8 +55,7 @@ server.get("/profile/:id", async (req, res) => {
   var inbox = await db.get(`inbox-${did}`);
   var followers = await db.get(`followers-${did}`);
   var following = await db.get(`following-${did}`);
-  
-  console.log(inbox);
+  var pendingRequests = await db.get(`pending-${did}`);
 
   res.render('pages/profile',{
     did: params["id"],
@@ -65,7 +64,8 @@ server.get("/profile/:id", async (req, res) => {
     inbox: inbox,
     doc: JSON.stringify(JSON.parse(await doc), null, 2),
     followers: followers,
-    following: following
+    following: following,
+    pendingRequests: pendingRequests
   });
 });
 
@@ -79,12 +79,20 @@ server.post("/request_follow", async (req, res) => {
     var issuerDID = await didByHandle(handle);
     var subjectDID = req.body.subjectDID;
     
-    issuerInbox = await db.get(`inbox-${issuerDID}`);
-    issuerInbox.push(subjectDID);
-    db.set(`inbox-${issuerDID}`, issuerInbox);
+    var alreadyPending = await checkPendingRequest(subjectDID, issuerDID);
+    
+    if (alreadyPending == false) {
+      issuerInbox = await db.get(`inbox-${issuerDID}`);
+      issuerInbox.push(subjectDID);
+      db.set(`inbox-${issuerDID}`, issuerInbox);
+      
+      addPendingRequest(subjectDID, issuerDID);
 
-    res.send("Request Sent");
-    res.status(201);
+      res.send("Request Sent");
+      res.status(201);
+    } else {
+      res.status(409).send(`Follow Request already sent to ${handle} before`);
+    }
   } else {
     console.log(`Account with handle:${handle} doesn't exist`);
     res.status(404).send(`Account with handle:${handle} doesn't exist`);
@@ -103,10 +111,8 @@ server.post("/accept_follow", async (req, res) => {
   updateFollowers(issuerDID, signedVC);
   console.log(await db.get(`followers-${issuerDID}`));
 
-  //removeRequestFromInbox
   removeRequestFromInbox(subjectDID, issuerDID);
   
-  //redirect back to profile page
   res.redirect(`profile/${issuerDID}`);
 });
 
@@ -122,6 +128,11 @@ async function handleUniqueness(handle) {
   return handlesTaken.includes(`handle-${handle}`);
 };
 
+async function checkPendingRequest(subjectDID, issuerDID) {
+  var pendingList = await db.get(`pending-${subjectDID}`);
+  return pendingList.includes(issuerDID);
+};
+
 async function createAccount(handle) {
   var key = DIDKit.generateEd25519Key();
   var did = DIDKit.keyToDID('key', key);
@@ -132,6 +143,7 @@ async function createAccount(handle) {
   db.set(`followers-${did}`, []);
   db.set(`following-${did}`, []);
   db.set(`handle-${handle}`, did);
+  db.set(`pending-${did}`, []);
 
   return {key: key, did: did, doc:doc}
 };
@@ -179,4 +191,10 @@ async function removeRequestFromInbox(subjectDID, issuerDID) {
     inbox.splice(index, 1);
   }
   db.set(`inbox-${issuerDID}`, inbox);
+};
+
+async function addPendingRequest(subjectDID, issuerDID) {
+  var pending = await db.get(`pending-${subjectDID}`);
+  pending.push(issuerDID);
+  db.set(`pending-${subjectDID}`, pending);
 };

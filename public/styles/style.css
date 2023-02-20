@@ -1081,8 +1081,8 @@ video {
   height: 50%;
 }
 
-.w-5\/6 {
-  width: 83.333333%;
+.w-4\/5 {
+  width: 80%;
 }
 
 .w-1\/2 {
@@ -1091,10 +1091,6 @@ video {
 
 .w-full {
   width: 100%;
-}
-
-.w-4\/5 {
-  width: 80%;
 }
 
 .flex-row {
