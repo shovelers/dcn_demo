@@ -121,6 +121,10 @@ server.get("/profilev2", (req, res) => {
   res.render('pages/profile_v2');
 });
 
+server.get("/contactlist", (req, res) => {
+  res.render('pages/contact_list');
+});
+
 server.listen(port, (err) => {
   if (err) throw err;
   console.log(
