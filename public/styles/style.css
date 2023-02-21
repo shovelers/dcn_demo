@@ -1097,6 +1097,22 @@ video {
   height: 100%;
 }
 
+.h-0 {
+  height: 0px;
+}
+
+.h-28 {
+  height: 7rem;
+}
+
+.h-7 {
+  height: 1.75rem;
+}
+
+.h-72 {
+  height: 18rem;
+}
+
 .w-2\/3 {
   width: 66.666667%;
 }
@@ -1254,6 +1270,11 @@ video {
   line-height: 1.75rem;
 }
 
+.text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
 .font-bold {
   font-weight: 700;
 }
@@ -1302,6 +1323,10 @@ video {
 
   .md\:h-48 {
     height: 12rem;
+  }
+
+  .md\:h-36 {
+    height: 9rem;
   }
 
   .md\:w-1\/2 {
