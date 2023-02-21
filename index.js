@@ -47,28 +47,6 @@ server.post("/signin", async (req, res) => {
   };
 });
 
-server.get("/profile/:id", async (req, res) => {
-  var params = req.params;
-  var did = params["id"];
-  var result = await db.get(did);
-  var doc = DIDKit.resolveDID(did, "{}");
-  var inbox = await db.get(`inbox-${did}`);
-  var followers = await db.get(`followers-${did}`);
-  var following = await db.get(`following-${did}`);
-  var pendingRequests = await db.get(`pending-${did}`);
-
-  res.render('pages/profile',{
-    did: params["id"],
-    key: result["key"],
-    handle: result["handle"],
-    inbox: inbox,
-    doc: JSON.stringify(JSON.parse(await doc), null, 2),
-    followers: followers,
-    following: following,
-    pendingRequests: pendingRequests
-  });
-});
-
 server.post("/request_follow", async (req, res) => {
   var handle = req.body.fhandle;
   
@@ -117,12 +95,39 @@ server.post("/accept_follow", async (req, res) => {
   res.redirect(`profile/${issuerDID}`);
 });
 
-server.get("/profilev2", (req, res) => {
-  res.render('pages/profile_v2');
+server.get("/profile/:id", async (req, res) => {
+  var params = req.params;
+  var did = params["id"];
+  var result = await db.get(did);
+  var followers = await db.get(`followers-${did}`);
+  var following = await db.get(`following-${did}`);
+
+  res.render('pages/profile_v2',{
+    did: params["id"],
+    key: result["key"],
+    handle: result["handle"],
+    follower_count: followers.length,
+    following_count: following.length
+  });
 });
 
-server.get("/contactlist", (req, res) => {
-  res.render('pages/contact_list');
+server.get("/contactlist/:id", async (req, res) => {
+  var params = req.params;
+  var did = params["id"];
+  var doc = DIDKit.resolveDID(did, "{}");
+  var inbox = await db.get(`inbox-${did}`);
+  var followers = await db.get(`followers-${did}`);
+  var following = await db.get(`following-${did}`);
+  var pendingRequests = await db.get(`pending-${did}`);
+
+  res.render('pages/contact_list',{
+    did: did,
+    inbox: inbox,
+    doc: JSON.stringify(JSON.parse(await doc), null, 2),
+    followers: followers,
+    following: following,
+    pendingRequests: pendingRequests
+  });
 });
 
 server.listen(port, (err) => {
