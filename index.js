@@ -117,6 +117,10 @@ server.post("/accept_follow", async (req, res) => {
   res.redirect(`profile/${issuerDID}`);
 });
 
+server.get("/profilev2", (req, res) => {
+  res.render('pages/profile_v2');
+});
+
 server.listen(port, (err) => {
   if (err) throw err;
   console.log(
